@@ -3,9 +3,9 @@ exports.handler = async (event) => {
         return { statusCode: 405, body: 'Method Not Allowed' }
     }
 
-    let name, message
+    let name, message, file_name, file_path
     try {
-        ;({ name, message } = JSON.parse(event.body))
+        ;({ name, message, file_name, file_path } = JSON.parse(event.body))
     } catch {
         return { statusCode: 400, body: 'Invalid JSON' }
     }
@@ -22,7 +22,12 @@ exports.handler = async (event) => {
             'Authorization': `Bearer ${process.env.SUPABASE_ANON_KEY}`,
             'Prefer': 'return=minimal'
         },
-        body: JSON.stringify({ name: name || null, message: message.trim() })
+        body: JSON.stringify({
+            name:      name      || null,
+            message:   message.trim(),
+            file_name: file_name || null,
+            file_path: file_path || null
+        })
     })
 
     if (!resp.ok) {
