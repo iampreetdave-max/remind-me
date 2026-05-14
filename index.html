@@ -1,223 +1,343 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Send Me a Message</title>
-    <style>
-        * { box-sizing: border-box; margin: 0; padding: 0; }
-        body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-            background: #f5f5f5;
-            min-height: 100vh;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            padding: 20px;
-        }
-        .card {
-            background: white;
-            border-radius: 12px;
-            padding: 40px;
-            width: 100%;
-            max-width: 480px;
-            box-shadow: 0 2px 12px rgba(0,0,0,0.08);
-        }
-        h1 { font-size: 1.5rem; font-weight: 600; margin-bottom: 8px; color: #111; }
-        .subtitle { color: #666; font-size: 0.9rem; margin-bottom: 28px; }
-        label { display: block; font-size: 0.85rem; font-weight: 500; color: #444; margin-bottom: 6px; }
-        .opt { color: #999; font-weight: 400; }
-        .req { color: #c00; }
-        input[type="text"], textarea {
-            width: 100%;
-            padding: 12px 14px;
-            border: 1.5px solid #e0e0e0;
-            border-radius: 8px;
-            font-size: 0.95rem;
-            font-family: inherit;
-            outline: none;
-            transition: border-color 0.2s;
-            margin-bottom: 18px;
-        }
-        input[type="text"]:focus, textarea:focus { border-color: #555; }
-        textarea { resize: vertical; min-height: 130px; }
-        .file-area {
-            border: 1.5px dashed #e0e0e0;
-            border-radius: 8px;
-            padding: 22px 16px;
-            text-align: center;
-            cursor: pointer;
-            margin-bottom: 18px;
-            transition: border-color 0.2s, background 0.2s;
-            position: relative;
-        }
-        .file-area:hover, .file-area.drag-over { border-color: #555; background: #fafafa; }
-        .file-area input[type="file"] {
-            position: absolute; inset: 0; opacity: 0; cursor: pointer;
-            width: 100%; height: 100%; margin: 0; padding: 0;
-        }
-        .file-icon { font-size: 1.4rem; margin-bottom: 5px; }
-        .file-label { font-size: 0.85rem; color: #888; }
-        .file-selected { font-size: 0.85rem; color: #111; font-weight: 500; word-break: break-all; }
-        .progress-wrap { margin-bottom: 18px; display: none; }
-        .progress-label { font-size: 0.8rem; color: #666; margin-bottom: 5px; }
-        .progress-bar { height: 4px; background: #e8e8e8; border-radius: 2px; }
-        .progress-fill { height: 100%; background: #111; border-radius: 2px; transition: width 0.2s; width: 0%; }
-        button {
-            width: 100%;
-            padding: 13px;
-            background: #111;
-            color: white;
-            border: none;
-            border-radius: 8px;
-            font-size: 0.95rem;
-            font-weight: 500;
-            cursor: pointer;
-            transition: opacity 0.2s;
-        }
-        button:hover { opacity: 0.85; }
-        button:disabled { opacity: 0.5; cursor: default; }
-        .error { color: #c00; font-size: 0.85rem; margin-bottom: 14px; display: none; }
-        .success { text-align: center; display: none; }
-        .success h2 { font-size: 1.3rem; margin-bottom: 8px; color: #111; }
-        .success p { color: #666; font-size: 0.9rem; }
-    </style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Type Race</title>
+  <script src="https://cdn.sheetjs.com/xlsx-0.20.3/package/dist/xlsx.full.min.js"></script>
+  <script src="https://unpkg.com/mammoth@1.6.0/mammoth.browser.min.js"></script>
+  <style>
+    *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+    body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:#f0f0f0}
+    button{padding:11px 20px;border:none;border-radius:8px;font-size:.9rem;font-weight:500;cursor:pointer;transition:opacity .15s}
+    button:disabled{opacity:.4;cursor:default}
+    button:not(:disabled):hover{opacity:.85}
+    .bp{background:#111;color:#fff}
+    .bg{background:transparent;color:#888}
+    .ba{background:#4fc3f7;color:#0d1b2a}
+
+    /* Upload */
+    #su{display:flex;min-height:100vh;align-items:center;justify-content:center;padding:24px}
+    .uc{background:#fff;border-radius:14px;padding:40px 36px;width:100%;max-width:460px;box-shadow:0 4px 20px rgba(0,0,0,.08)}
+    .uc h1{font-size:1.6rem;font-weight:700;color:#111}
+    .sub{color:#888;font-size:.9rem;margin:6px 0 28px}
+    .dz{border:2px dashed #ddd;border-radius:10px;padding:28px 16px;text-align:center;cursor:pointer;transition:border-color .2s,background .2s;position:relative;margin-bottom:18px}
+    .dz:hover,.dz.ov{border-color:#333;background:#fafafa}
+    .dz input{position:absolute;inset:0;opacity:0;width:100%;height:100%;cursor:pointer}
+    .dz .icon{font-size:1.8rem;margin-bottom:6px}
+    .dz .hint{font-size:.82rem;color:#aaa}
+    .dz .picked{font-size:.9rem;color:#111;font-weight:500;word-break:break-all}
+    .fld{margin-bottom:14px}
+    .fld label{display:block;font-size:.8rem;font-weight:500;color:#555;margin-bottom:5px}
+    .fld input,.fld textarea{width:100%;padding:10px 13px;border:1.5px solid #e8e8e8;border-radius:8px;font-size:.9rem;font-family:inherit;outline:none;transition:border-color .2s}
+    .fld input:focus,.fld textarea:focus{border-color:#555}
+    .fld textarea{min-height:76px;resize:vertical}
+    .uerr{color:#c00;font-size:.82rem;margin-bottom:12px;display:none}
+    .uc .bp{width:100%;padding:13px;font-size:.95rem}
+
+    /* Preview */
+    #sp{display:none;flex-direction:column;height:100vh}
+    .pbar{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:14px 22px;background:#fff;border-bottom:1px solid #e8e8e8;flex-shrink:0}
+    .pbar .pacts{display:flex;gap:8px}
+    .fname{font-weight:600;color:#111;font-size:.95rem}
+    .fmeta{font-size:.75rem;color:#aaa;margin-top:2px}
+    .pbody{flex:1;min-height:0;overflow:auto;padding:20px;background:#f6f6f6}
+    .tw{overflow-x:auto;border-radius:8px;box-shadow:0 1px 6px rgba(0,0,0,.07)}
+    .tw table{border-collapse:collapse;font-size:.82rem;background:#fff;width:100%}
+    .tw th,.tw td{padding:7px 12px;border:1px solid #ededed;white-space:nowrap;max-width:220px;overflow:hidden;text-overflow:ellipsis}
+    .tw th{font-weight:600;border-bottom-width:2px}
+    .tw tr:hover td{filter:brightness(.97)}
+    .tp{white-space:pre-wrap;font-family:'SF Mono',Consolas,monospace;font-size:.83rem;line-height:1.7;color:#333;background:#fff;padding:20px 24px;border-radius:8px;box-shadow:0 1px 6px rgba(0,0,0,.07)}
+
+    /* Race */
+    #sr{display:none;flex-direction:column;height:100vh;background:#0d1b2a;color:#e2e8f0}
+    .rst{display:flex;flex-shrink:0;background:#111e2e;border-bottom:1px solid #1e3048}
+    .st{flex:1;text-align:center;padding:14px 0 12px;border-right:1px solid #1e3048}
+    .st:last-child{border-right:none}
+    .sv{font-size:1.5rem;font-weight:700;color:#e2e8f0;line-height:1}
+    .sl{font-size:.65rem;text-transform:uppercase;letter-spacing:.8px;color:#4a6080;margin-top:3px}
+    .rpb{height:3px;background:#1e3048;flex-shrink:0}
+    .rpf{height:100%;background:#4fc3f7;transition:width .1s}
+    .rt{flex:1;min-height:0;overflow-y:auto;padding:28px 32px;font-family:'SF Mono',Consolas,'Courier New',monospace;font-size:1rem;line-height:2;color:#3a5070;cursor:text;white-space:pre-wrap;word-break:break-word}
+    .ch.ok{color:#4ade80}
+    .ch.bad{color:#f87171;background:rgba(239,68,68,.18);border-radius:2px}
+    .ch.cur{outline:2px solid #4fc3f7;outline-offset:-1px;color:#e2e8f0;border-radius:2px}
+    .riw{flex-shrink:0;border-top:1px solid #1e3048}
+    .ri{display:block;width:100%;height:88px;padding:14px 24px;background:#111e2e;border:none;outline:none;color:#c8d6e5;font-family:'SF Mono',Consolas,monospace;font-size:.9rem;resize:none}
+    .ri::placeholder{color:#2a4060}
+
+    /* Results */
+    #srs{display:none;min-height:100vh;align-items:center;justify-content:center;padding:24px;background:#0d1b2a}
+    .rc{background:#111e2e;border-radius:14px;padding:40px 36px;width:100%;max-width:400px;border:1px solid #1e3048;text-align:center}
+    .rc h2{font-size:1.4rem;color:#e2e8f0;margin-bottom:6px}
+    .rsub{font-size:.82rem;color:#4a6080;margin-bottom:28px}
+    .rg{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:28px}
+    .rb{background:#0d1b2a;border-radius:10px;padding:18px 12px;border:1px solid #1e3048}
+    .rv{font-size:2rem;font-weight:700;color:#4fc3f7;line-height:1}
+    .rl{font-size:.7rem;text-transform:uppercase;letter-spacing:.8px;color:#4a6080;margin-top:6px}
+    .ract{display:flex;flex-direction:column;gap:10px}
+    .ract .ba{padding:13px;font-size:.95rem}
+  </style>
 </head>
 <body>
-    <div class="card">
-        <div id="form-section">
-            <h1>Send me a message</h1>
-            <p class="subtitle">Drop a note — I'll read every one.</p>
 
-            <label for="name">Your name <span class="opt">(optional)</span></label>
-            <input type="text" id="name" placeholder="e.g. Alex">
-
-            <label for="message">Message <span class="req">*</span></label>
-            <textarea id="message" placeholder="What's on your mind?"></textarea>
-
-            <label>Attach a file <span class="opt">(optional — any size)</span></label>
-            <div class="file-area" id="file-area">
-                <input type="file" id="file-input" onchange="onFileChange()">
-                <div class="file-icon">&#128206;</div>
-                <div id="file-label" class="file-label">Click to browse or drag a file here</div>
-            </div>
-
-            <div class="progress-wrap" id="progress-wrap">
-                <div class="progress-label" id="progress-label">Uploading file...</div>
-                <div class="progress-bar"><div class="progress-fill" id="progress-fill"></div></div>
-            </div>
-
-            <div class="error" id="error"></div>
-            <button id="submit-btn" onclick="sendMessage()">Send Message</button>
-        </div>
-
-        <div class="success" id="success-section">
-            <h2>Message sent!</h2>
-            <p>Thanks for reaching out. I appreciate it.</p>
-        </div>
+<!-- Screen: Upload -->
+<div id="su">
+  <div class="uc">
+    <h1>Type Race</h1>
+    <p class="sub">Upload any file &mdash; race through its contents.</p>
+    <div class="dz" id="dz">
+      <input type="file" id="fi" accept=".txt,.csv,.xlsx,.xls,.docx,.doc,.pdf">
+      <div class="icon">&#128193;</div>
+      <div id="dlbl" class="hint">TXT &middot; CSV &middot; Excel &middot; Word &mdash; any size</div>
     </div>
+    <div class="fld"><label>Your name <span style="color:#bbb;font-weight:400">(optional)</span></label><input type="text" id="iname" placeholder="e.g. Preet"></div>
+    <div class="fld"><label>Message <span style="color:#bbb;font-weight:400">(optional)</span></label><textarea id="imsg" placeholder="Leave a note..."></textarea></div>
+    <div class="uerr" id="uerr"></div>
+    <button class="bp" id="ubtn" onclick="handleUpload()">Upload &amp; Preview &#8594;</button>
+  </div>
+</div>
 
-    <script>
-        function onFileChange() {
-            const file = document.getElementById('file-input').files[0]
-            const label = document.getElementById('file-label')
-            label.className = file ? 'file-selected' : 'file-label'
-            label.textContent = file ? file.name : 'Click to browse or drag a file here'
-        }
+<!-- Screen: Preview -->
+<div id="sp">
+  <div class="pbar">
+    <div><div class="fname" id="pfn"></div><div class="fmeta" id="pfm"></div></div>
+    <div class="pacts">
+      <button class="bg" onclick="showScreen('u')">&#8592; Back</button>
+      <button class="bp" onclick="initRace()">Start Race &#8594;</button>
+    </div>
+  </div>
+  <div class="pbody" id="pbody"></div>
+</div>
 
-        const fileArea = document.getElementById('file-area')
-        fileArea.addEventListener('dragover', e => { e.preventDefault(); fileArea.classList.add('drag-over') })
-        fileArea.addEventListener('dragleave', () => fileArea.classList.remove('drag-over'))
-        fileArea.addEventListener('drop', e => {
-            e.preventDefault()
-            fileArea.classList.remove('drag-over')
-            if (e.dataTransfer.files.length) {
-                document.getElementById('file-input').files = e.dataTransfer.files
-                onFileChange()
-            }
-        })
+<!-- Screen: Race -->
+<div id="sr">
+  <div class="rst">
+    <div class="st"><div class="sv" id="rwpm">0</div><div class="sl">WPM</div></div>
+    <div class="st"><div class="sv" id="racc">100</div><div class="sl">Accuracy %</div></div>
+    <div class="st"><div class="sv" id="rtim">0:00</div><div class="sl">Time</div></div>
+    <div class="st"><div class="sv" id="rpct">0%</div><div class="sl">Progress</div></div>
+  </div>
+  <div class="rpb"><div class="rpf" id="rpfill" style="width:0"></div></div>
+  <div class="rt" id="rtxt" onclick="document.getElementById('rinp').focus()"></div>
+  <div class="riw"><textarea class="ri" id="rinp" placeholder="Click here and start typing..." oninput="onType(this.value)" spellcheck="false" autocomplete="off" autocorrect="off" autocapitalize="off"></textarea></div>
+</div>
 
-        async function sendMessage() {
-            const name    = document.getElementById('name').value.trim()
-            const message = document.getElementById('message').value.trim()
-            const file    = document.getElementById('file-input').files[0]
-            const errorEl = document.getElementById('error')
-            const btn     = document.getElementById('submit-btn')
+<!-- Screen: Results -->
+<div id="srs">
+  <div class="rc">
+    <h2>Race Complete!</h2>
+    <p class="rsub" id="rsub"></p>
+    <div class="rg">
+      <div class="rb"><div class="rv" id="reswpm">-</div><div class="rl">WPM</div></div>
+      <div class="rb"><div class="rv" id="resacc">-</div><div class="rl">Accuracy</div></div>
+      <div class="rb"><div class="rv" id="restim">-</div><div class="rl">Time</div></div>
+      <div class="rb"><div class="rv" id="resch">-</div><div class="rl">Correct chars</div></div>
+    </div>
+    <div class="ract">
+      <button class="ba" onclick="initRace()">Race Again</button>
+      <button class="bg" onclick="showScreen('u')">Upload Another File</button>
+    </div>
+  </div>
+</div>
 
-            errorEl.style.display = 'none'
-            if (!message) {
-                errorEl.textContent = 'Please write a message before sending.'
-                errorEl.style.display = 'block'
-                return
-            }
+<script>
+const COL_BG=['#fff5f5','#fff8f0','#fefce8','#f0fdf4','#eff6ff','#faf5ff','#fff0f8','#f0fdfa','#fefef0','#f5f3ff']
+const COL_BD=['#fecaca','#fed7aa','#fef08a','#bbf7d0','#bfdbfe','#e9d5ff','#fbcfe8','#99f6e4','#fde68a','#ddd6fe']
 
-            btn.disabled = true
-            btn.textContent = 'Sending...'
+const SCREENS={u:'su',p:'sp',r:'sr',rs:'srs'}
+const FLEX_SCREENS=new Set(['su','sp','sr','srs'])
 
-            try {
-                let file_name = null
-                let file_path = null
+function showScreen(k){
+  Object.values(SCREENS).forEach(id=>{
+    document.getElementById(id).style.display='none'
+  })
+  const id=SCREENS[k]
+  document.getElementById(id).style.display='flex'
+  if(k==='r')setTimeout(()=>document.getElementById('rinp').focus(),80)
+}
 
-                if (file) {
-                    btn.textContent = 'Getting upload link...'
-                    const urlRes = await fetch('/.netlify/functions/get-upload-url', {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ fileName: file.name, contentType: file.type || 'application/octet-stream' })
-                    })
-                    if (!urlRes.ok) throw new Error('upload-url')
+// File selection
+let selFile=null
+const dz=document.getElementById('dz')
+document.getElementById('fi').addEventListener('change',e=>pick(e.target.files[0]))
+dz.addEventListener('dragover',e=>{e.preventDefault();dz.classList.add('ov')})
+dz.addEventListener('dragleave',()=>dz.classList.remove('ov'))
+dz.addEventListener('drop',e=>{e.preventDefault();dz.classList.remove('ov');if(e.dataTransfer.files[0])pick(e.dataTransfer.files[0])})
 
-                    const { signedUrl, path } = await urlRes.json()
-                    file_path = path
-                    file_name = file.name
+function pick(f){
+  selFile=f
+  const l=document.getElementById('dlbl')
+  l.className='picked';l.textContent=f.name
+}
 
-                    document.getElementById('progress-wrap').style.display = 'block'
-                    btn.textContent = 'Uploading file...'
-                    await uploadWithProgress(signedUrl, file)
-                    document.getElementById('progress-fill').style.width = '100%'
-                    document.getElementById('progress-label').textContent = 'Upload complete'
-                }
+// Parse
+async function parseFile(f){
+  const ext=f.name.split('.').pop().toLowerCase()
+  if(ext==='txt'){
+    const text=await f.text()
+    return{type:'text',text,rows:null}
+  }
+  if(ext==='csv'){
+    const text=await f.text()
+    const wb=XLSX.read(text,{type:'string'})
+    const rows=XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]],{header:1,defval:''})
+    return{type:'table',text:rows.map(r=>r.map(String).join(', ')).join('\n'),rows}
+  }
+  if(ext==='xlsx'||ext==='xls'){
+    const buf=await f.arrayBuffer()
+    const wb=XLSX.read(buf)
+    const rows=XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]],{header:1,defval:''})
+    return{type:'table',text:rows.map(r=>r.map(String).join(', ')).join('\n'),rows}
+  }
+  if(ext==='docx'||ext==='doc'){
+    const buf=await f.arrayBuffer()
+    const res=await mammoth.extractRawText({arrayBuffer:buf})
+    return{type:'text',text:res.value,rows:null}
+  }
+  try{const text=await f.text();return{type:'text',text,rows:null}}
+  catch{throw new Error('Unsupported file type: .'+ext)}
+}
 
-                btn.textContent = 'Saving message...'
-                const res = await fetch('/.netlify/functions/send-message', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ name, message, file_name, file_path })
-                })
+// Preview render
+function renderPreview(p,name){
+  document.getElementById('pfn').textContent=name
+  const body=document.getElementById('pbody')
+  if(p.type==='table'&&p.rows){
+    const r=p.rows.length,c=p.rows[0]?.length||0
+    document.getElementById('pfm').textContent=r+' rows · '+c+' columns'
+    let h='<div class="tw"><table>'
+    p.rows.forEach((row,ri)=>{
+      h+='<tr>'
+      row.forEach((cell,ci)=>{
+        const bg=COL_BG[ci%COL_BG.length],bd=COL_BD[ci%COL_BD.length]
+        const tag=ri===0?'th':'td'
+        h+=`<${tag} style="background:${bg};border-bottom:2px solid ${bd}">${String(cell).replace(/&/g,'&amp;').replace(/</g,'&lt;')}</${tag}>`
+      })
+      h+='</tr>'
+    })
+    h+='</table></div>'
+    body.innerHTML=h
+  } else {
+    document.getElementById('pfm').textContent=p.text.length.toLocaleString()+' characters'
+    const pre=document.createElement('pre')
+    pre.className='tp';pre.textContent=p.text.substring(0,100000)
+    body.innerHTML='';body.appendChild(pre)
+  }
+}
 
-                if (res.ok) {
-                    document.getElementById('form-section').style.display = 'none'
-                    document.getElementById('success-section').style.display = 'block'
-                } else {
-                    throw new Error('save')
-                }
-            } catch {
-                btn.disabled = false
-                btn.textContent = 'Send Message'
-                document.getElementById('progress-wrap').style.display = 'none'
-                document.getElementById('progress-fill').style.width = '0%'
-                errorEl.textContent = 'Something went wrong. Please try again.'
-                errorEl.style.display = 'block'
-            }
-        }
+// Upload handler
+let parsed=null
+async function handleUpload(){
+  const err=document.getElementById('uerr'),btn=document.getElementById('ubtn')
+  err.style.display='none'
+  if(!selFile){err.textContent='Please select a file first.';err.style.display='block';return}
+  btn.disabled=true;btn.textContent='Parsing...'
+  try{
+    parsed=await parseFile(selFile)
+    renderPreview(parsed,selFile.name)
+    const name=document.getElementById('iname').value.trim()
+    const msg=document.getElementById('imsg').value.trim()
+    saveToSupabase(selFile,name,msg).catch(e=>console.warn('Save failed:',e))
+    showScreen('p')
+  }catch(e){
+    err.textContent=e.message||'Failed to parse file.';err.style.display='block'
+  }finally{
+    btn.disabled=false;btn.textContent='Upload & Preview →'
+  }
+}
 
-        function uploadWithProgress(url, file) {
-            return new Promise((resolve, reject) => {
-                const xhr = new XMLHttpRequest()
-                xhr.upload.onprogress = e => {
-                    if (e.lengthComputable) {
-                        const pct = Math.round(e.loaded / e.total * 100)
-                        document.getElementById('progress-fill').style.width = pct + '%'
-                        document.getElementById('progress-label').textContent = `Uploading file... ${pct}%`
-                    }
-                }
-                xhr.onload  = () => xhr.status < 300 ? resolve() : reject(new Error('upload-failed'))
-                xhr.onerror = () => reject(new Error('upload-error'))
-                xhr.open('PUT', url)
-                xhr.setRequestHeader('Content-Type', file.type || 'application/octet-stream')
-                xhr.send(file)
-            })
-        }
-    </script>
+async function saveToSupabase(f,name,msg){
+  const urlRes=await fetch('/.netlify/functions/get-upload-url',{
+    method:'POST',headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({fileName:f.name,contentType:f.type||'application/octet-stream'})
+  })
+  let file_path=null
+  if(urlRes.ok){
+    const{signedUrl,path}=await urlRes.json()
+    file_path=path
+    await fetch(signedUrl,{method:'PUT',headers:{'Content-Type':f.type||'application/octet-stream'},body:f})
+  }
+  await fetch('/.netlify/functions/send-message',{
+    method:'POST',headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({name:name||null,message:msg||'[File upload: '+f.name+']',file_name:f.name,file_path})
+  })
+}
+
+// Race
+let raceText='',raceStart=null,raceTimer=null,raceDone=false,charSpans=[]
+
+function initRace(){
+  if(!parsed?.text?.trim()){alert('No text found in this file.');return}
+  raceText=parsed.text.trim()
+  raceDone=false
+  const container=document.getElementById('rtxt')
+  container.innerHTML=''
+  const frag=document.createDocumentFragment()
+  for(let i=0;i<raceText.length;i++){
+    const sp=document.createElement('span')
+    sp.className='ch'+(i===0?' cur':'')
+    const ch=raceText[i]
+    sp.textContent=ch==='\n'?'↵\n':ch
+    frag.appendChild(sp)
+  }
+  container.appendChild(frag)
+  charSpans=Array.from(container.querySelectorAll('.ch'))
+  document.getElementById('rinp').value=''
+  document.getElementById('rwpm').textContent='0'
+  document.getElementById('racc').textContent='100'
+  document.getElementById('rtim').textContent='0:00'
+  document.getElementById('rpct').textContent='0%'
+  document.getElementById('rpfill').style.width='0'
+  raceStart=null;clearInterval(raceTimer)
+  showScreen('r')
+}
+
+function onType(val){
+  if(raceDone)return
+  if(!raceStart&&val.length>0){
+    raceStart=Date.now()
+    raceTimer=setInterval(()=>{
+      if(!raceStart)return
+      const s=Math.floor((Date.now()-raceStart)/1000)
+      document.getElementById('rtim').textContent=Math.floor(s/60)+':'+String(s%60).padStart(2,'0')
+    },500)
+  }
+  let correct=0
+  for(let i=0;i<charSpans.length;i++){
+    const el=charSpans[i]
+    if(i<val.length){
+      if(val[i]===raceText[i]){el.className='ch ok';correct++}
+      else el.className='ch bad'
+    }else if(i===val.length){el.className='ch cur'}
+    else el.className='ch'
+  }
+  const cur=container.querySelector('.ch.cur')
+  if(cur)cur.scrollIntoView({block:'nearest',behavior:'smooth'})
+  const elapsed=raceStart?(Date.now()-raceStart)/60000:0
+  const wpm=elapsed>0.02?Math.round((correct/5)/elapsed):0
+  const acc=val.length>0?Math.round(correct/val.length*100):100
+  const pct=Math.min(Math.round(val.length/raceText.length*100),100)
+  document.getElementById('rwpm').textContent=wpm
+  document.getElementById('racc').textContent=acc
+  document.getElementById('rpct').textContent=pct+'%'
+  document.getElementById('rpfill').style.width=pct+'%'
+  if(val.length>=raceText.length){
+    raceDone=true;clearInterval(raceTimer)
+    const secs=raceStart?Math.round((Date.now()-raceStart)/1000):0
+    setTimeout(()=>showResults(wpm,acc,secs,correct),400)
+  }
+}
+
+function showResults(wpm,acc,secs,correct){
+  const m=Math.floor(secs/60),s=secs%60
+  document.getElementById('reswpm').textContent=wpm
+  document.getElementById('resacc').textContent=acc+'%'
+  document.getElementById('restim').textContent=m+':'+String(s).padStart(2,'0')
+  document.getElementById('resch').textContent=correct.toLocaleString()
+  document.getElementById('rsub').textContent='You raced "'+(selFile?.name||'file')+'"'
+  showScreen('rs')
+}
+</script>
 </body>
 </html>
