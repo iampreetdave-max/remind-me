@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Send Me a Message</title>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            background: #f5f5f5;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+        .card {
+            background: white;
+            border-radius: 12px;
+            padding: 40px;
+            width: 100%;
+            max-width: 480px;
+            box-shadow: 0 2px 12px rgba(0,0,0,0.08);
+        }
+        h1 { font-size: 1.5rem; font-weight: 600; margin-bottom: 8px; color: #111; }
+        p { color: #666; font-size: 0.9rem; margin-bottom: 28px; }
+        input, textarea {
+            width: 100%;
+            padding: 12px 14px;
+            border: 1.5px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 0.95rem;
+            font-family: inherit;
+            outline: none;
+            transition: border-color 0.2s;
+            margin-bottom: 14px;
+        }
+        input:focus, textarea:focus { border-color: #555; }
+        textarea { resize: vertical; min-height: 120px; }
+        button {
+            width: 100%;
+            padding: 13px;
+            background: #111;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 0.95rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: opacity 0.2s;
+        }
+        button:hover { opacity: 0.85; }
+        button:disabled { opacity: 0.5; cursor: default; }
+        .success { text-align: center; display: none; }
+        .success h2 { font-size: 1.3rem; margin-bottom: 8px; color: #111; }
+        .success p { margin-bottom: 0; }
+        .error {
+            color: #c00;
+            font-size: 0.85rem;
+            margin-top: -8px;
+            margin-bottom: 14px;
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="card">
+        <div id="form-section">
+            <h1>Send me a message</h1>
+            <p>Drop a note — I'll read every one.</p>
+            <input type="text" id="name" placeholder="Your name (optional)" maxlength="100">
+            <textarea id="message" placeholder="What's on your mind?" maxlength="2000" required></textarea>
+            <div class="error" id="error">Please write a message before sending.</div>
+            <button id="submit-btn" onclick="sendMessage()">Send Message</button>
+        </div>
+        <div class="success" id="success-section">
+            <h2>Message sent!</h2>
+            <p>Thanks for reaching out. I appreciate it.</p>
+        </div>
+    </div>
+
+    <script>
+        async function sendMessage() {
+            const name = document.getElementById('name').value.trim()
+            const message = document.getElementById('message').value.trim()
+            const error = document.getElementById('error')
+            const btn = document.getElementById('submit-btn')
+
+            error.style.display = 'none'
+
+            if (!message) {
+                error.textContent = 'Please write a message before sending.'
+                error.style.display = 'block'
+                return
+            }
+
+            btn.disabled = true
+            btn.textContent = 'Sending...'
+
+            try {
+                const res = await fetch('/.netlify/functions/send-message', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ name, message })
+                })
+
+                if (res.ok) {
+                    document.getElementById('form-section').style.display = 'none'
+                    document.getElementById('success-section').style.display = 'block'
+                } else {
+                    throw new Error()
+                }
+            } catch {
+                btn.disabled = false
+                btn.textContent = 'Send Message'
+                error.textContent = 'Something went wrong. Please try again.'
+                error.style.display = 'block'
+            }
+        }
+    </script>
+</body>
+</html>
